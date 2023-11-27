@@ -1,31 +1,36 @@
 package scene;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import view.util.Subject;
 
 public class GameScene extends Subject{
-    private static final int PIECE_LENGTH = 100;
-    private static final int WIDTH = 200;
-    private static final int HEIGHT = 80;
+    private static final int WIDTH = 125;
+    private static final int HEIGHT = 50;
+    private static final int STOCK_SIZE = 10;
     
     private int width;
     private int height;
     private boolean[][] cells;
-    private List<Piece> pieces;
-    private Stock stock;
 
-    public GameScene(int width, int height){
+    private Stock stock;
+    private List<Piece> pieces;
+    private Piece currentPiece;
+
+    public GameScene(int width, int height, int stockSize){
         this.width = width;
         this.height = height;
         this.cells = new boolean[width][height];
         this.pieces = new CopyOnWriteArrayList<>();
-        this.stock = new Stock();
+        this.stock = new Stock(stockSize);
+        this.currentPiece = null;
         resetCells();
+    }
+
+    public GameScene(int width, int height){
+        this(width, height, STOCK_SIZE);
     }
 
     public GameScene(){
@@ -77,53 +82,56 @@ public class GameScene extends Subject{
     private void start(){
         boolean finish = false;
         while(!finish){
-            System.out.println("Nouvelle piece !");
-            Piece p = preparePiece();
-            finish = isBlocked(p);
-            if(finish){
-                System.out.println("Cette piece n'a pas pu être placé : " + p);
-                break;
-            }
+            // System.out.println("Nouvelle piece !");
+            currentPiece = preparePiece();
             reload();
-            while (!pieceFinish(p)) {
-                p.y++;
+            while (!pieceFinish(currentPiece)) {
+                currentPiece.move(Move.DOWN);
                 reload();
-                sleep(1);
+                sleep(100);
             }
+            finish = isFinish();
         }
         System.out.println("Finish !");
     }
-
-    static Random ra = new Random(0);
     
     private Piece preparePiece(){
         Piece p = stock.pop();
-        p.x = (int)(ra.nextDouble(width - 4));
+        p.x = (int)(Math.random() * (width - p.width));
         p.y = 0;
         addPiece(p);
         return p;
     }
 
-    private boolean isBlocked(Piece p){
-        for (int y = 0; y < p.cell.length; y++) {
-            for (int x = 0; x < p.cell[y].length; x++) {
-                if(!p.cell[y][x]) continue;
-                if(isFull(p.x + x, p.y + y)) return true;
-            }
+    private boolean isFinish(){
+        for (int i = 0; i < cells.length; i++) {
+            if(cells[i].length > 0 && cells[i][0]) return true;
         }
         return false;
     }
     
     private boolean pieceFinish(Piece p){
-        for (int y = 0; y < p.cell.length; y++) {
-            for (int x = 0; x < p.cell[y].length; x++) {
-                if(!p.cell[y][x]) continue;
+        for (int y = 0; y < p.cells.length; y++) {
+            for (int x = 0; x < p.cells[y].length; x++) {
+                if(!p.cells[y][x]) continue;
                 if(p.y + y >= height - 1) return true;
-                if(y < p.cell.length - 1 && p.cell[y + 1][x]) continue;
+                if(y < p.cells.length - 1 && p.cells[y + 1][x]) continue;
                 if(isFull(p.x + x, p.y + y + 1)) return true;
             }
         }
         return false;
+    }
+
+    public void keyPressed(String key){
+        switch (key) {
+            case "Z": currentPiece.move(Move.UP); break;
+            case "S": currentPiece.move(Move.DOWN); break;
+            case "Q": currentPiece.move(Move.LEFT); break;
+            case "D": currentPiece.move(Move.RIGHT); break;
+            case "A": currentPiece.move(Move.ROTATE_LEFT); break;
+            case "E": currentPiece.move(Move.ROTATE_RIGHT); break;
+            default: break;
+        }
     }
 
     private void reload(){
@@ -134,14 +142,14 @@ public class GameScene extends Subject{
 
     private void placePieces(){
         for (Piece p : pieces) {
-            placePiece(p);
+            if(p != currentPiece) placePiece(p);
         }
     }
 
     private void placePiece(Piece p){
-        for (int y = 0; y < p.cell.length; y++) {
-            for (int x = 0; x < p.cell[y].length; x++) {
-                if(p.cell[y][x]){
+        for (int y = 0; y < p.cells.length; y++) {
+            for (int x = 0; x < p.cells[y].length; x++) {
+                if(p.cells[y][x]){
                     placeCell(p.x + x, p.y + y);
                 }
             }

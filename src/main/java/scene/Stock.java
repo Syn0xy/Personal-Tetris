@@ -22,6 +22,10 @@ public class Stock {
         return pieces;
     }
 
+    public int getIndex(){
+        return index;
+    }
+
     protected void reset(){
         for (int i = 0; i < pieces.length; i++) {
             pieces[i] = random();

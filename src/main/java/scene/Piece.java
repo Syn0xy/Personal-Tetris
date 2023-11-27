@@ -29,7 +29,9 @@ public class Piece {
     private String[] build;
     private Color color;
 
-    protected boolean[][] cell;
+    protected boolean[][] cells;
+    public int width;
+    public int height;
     public int x;
     public int y;
 
@@ -37,17 +39,27 @@ public class Piece {
         this.name = name;
         this.build = build;
         this.color = color;
-        this.cell = build(build);
+        this.cells = build(build);
+        this.height = cells.length;
+        this.width = cells.length > 0 ? cells[0].length : 0;
         this.x = 0;
         this.y = 0;
     }
 
-    public boolean[][] getCell(){
-        return cell;
+    public boolean[][] getCells(){
+        return cells;
     }
 
     public Color getColor(){
         return color;
+    }
+
+    public int getWidth(){
+        return width;
+    }
+
+    public int getHeight(){
+        return height;
     }
 
     public boolean[][] build(String[] build){
@@ -62,6 +74,39 @@ public class Piece {
             }
         }
         return cell;
+    }
+
+    public void move(Move m){
+        switch (m) {
+            case UP: y--; break;
+            case DOWN: y++; break;
+            case LEFT: x--; break;
+            case RIGHT: x++; break;
+            case ROTATE_LEFT: rotateLeft(); break;
+            case ROTATE_RIGHT: rotateRight(); break;
+            default: break;
+        }
+    }
+
+    private void rotateLeft(){
+        for (int i = 0; i < 3; i++) {
+            rotateRight();
+        }
+    }
+
+    private void rotateRight(){
+        if(width > 0 && height > 0){
+            int tmp = width;
+            width = height;
+            height = tmp;
+            boolean[][] b = new boolean[width][height];
+            for (int y = 0; y < cells.length; y++) {
+                for (int x = 0; x < cells[y].length; x++) {
+                    b[x][y] = cells[y][x];
+                }
+            }
+            cells = b;
+        }
     }
 
     public Piece copy(){

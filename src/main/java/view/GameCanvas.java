@@ -12,7 +12,7 @@ import scene.Stock;
 
 public class GameCanvas extends JPanel {
     private static final Color BACKGROUND = Color.BLACK;
-    private static final int CELL_SIZE = 5;
+    private static final int CELL_SIZE = 10;
 
     private GameScene gameScene;
 
@@ -32,8 +32,8 @@ public class GameCanvas extends JPanel {
     public int getMapX(int x){ return getXStart() + x * CELL_SIZE; }
     public int getMapY(int y){ return getYStart() + y * CELL_SIZE; }
 
-    public int getStockX(int x){ return getXStockStart() + (x + 2) * CELL_SIZE; }
-    public int getStockY(int y, int index){ return getYStockStart() + (y + index + 1) * CELL_SIZE; }
+    public int getStockX(int x){ return getXStockStart() + (x + 1) * CELL_SIZE; }
+    public int getStockY(int y, int ystart){ return getYStockStart() + (y + ystart + 1) * CELL_SIZE; }
 
     @Override
     public void paint(Graphics g){
@@ -49,11 +49,12 @@ public class GameCanvas extends JPanel {
     public void draw(Graphics g){
         List<Piece> p = gameScene.getPieces();
         Stock s = gameScene.getPiecesStock();
+        Piece[] ps = s.getPieces();
 
         drawMap(g);
-        drawStocksMap(g, s);
+        drawStocksMap(g, ps);
         drawPieces(g, p);
-        drawStock(g, s);
+        drawStock(g, ps, s.getIndex());
     }
 
     public void drawMap(Graphics g){
@@ -61,10 +62,15 @@ public class GameCanvas extends JPanel {
         g.drawRect(getXStart() - 1, getYStart() - 1, getMapWidth() + 1, getMapHeight() + 1);
     }
 
-    public void drawStocksMap(Graphics g, Stock s){
-        int l = s.getPieces().length;
+    public void drawStocksMap(Graphics g, Piece[] ps){
+        int width = 0;
+        int height = ps.length + 1;
+        for (Piece p : ps) {
+            height += p.getHeight();
+            if(p.getWidth() > width) width = p.getWidth();
+        }
         g.setColor(Color.WHITE);
-        g.drawRect(getXStockStart() - 1, getYStockStart() - 1, 6 * CELL_SIZE + 1, (l * 2 + 1) * CELL_SIZE + 1);
+        g.drawRect(getXStockStart() - 1, getYStockStart() - 1, (width + 2) * CELL_SIZE + 1, height * CELL_SIZE + 1);
     }
 
     public void drawPieces(Graphics g, List<Piece> pieces){
@@ -79,27 +85,30 @@ public class GameCanvas extends JPanel {
 
     public void drawPiece(Graphics g, Piece p, int x, int y){
         g.setColor(p.getColor());
-        for (int py = 0; py < p.getCell().length; py++) {
-            for (int px = 0; px < p.getCell()[py].length; px++) {
-                if(p.getCell()[py][px]){
+        for (int py = 0; py < p.getCells().length; py++) {
+            for (int px = 0; px < p.getCells()[py].length; px++) {
+                if(p.getCells()[py][px]){
                     g.fillRect(getMapX(px + x), getMapY(py + y), CELL_SIZE, CELL_SIZE);
                 }
             }
         }
     }
     
-    public void drawStock(Graphics g, Stock s){
-        for (int i = 0; i < s.getPieces().length; i++) {
-            drawPieceStock(g, s.getPieces()[i], i);
+    public void drawStock(Graphics g, Piece[] ps, int index){
+        int ystart = 0;
+        for (int i = 0; i < ps.length; i++) {
+            Piece p = ps[(i + index) % ps.length];
+            drawPieceStock(g, p, ystart);
+            ystart += p.height + 1;
         }
     }
 
-    public void drawPieceStock(Graphics g, Piece p, int index){
+    public void drawPieceStock(Graphics g, Piece p, int ystart){
         g.setColor(p.getColor());
-        for (int py = 0; py < p.getCell().length; py++) {
-            for (int px = 0; px < p.getCell()[py].length; px++) {
-                if(p.getCell()[py][px]){
-                    g.fillRect(getStockX(px), getStockY(py, index), CELL_SIZE, CELL_SIZE);
+        for (int y = 0; y < p.getCells().length; y++) {
+            for (int x = 0; x < p.getCells()[y].length; x++) {
+                if(p.getCells()[y][x]){
+                    g.fillRect(getStockX(x), getStockY(y, ystart), CELL_SIZE, CELL_SIZE);
                 }
             }
         }
