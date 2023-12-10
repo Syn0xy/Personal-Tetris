@@ -1,7 +1,6 @@
 package scene;
 
 public enum Move {
-    UP,
     DOWN,
     LEFT,
     RIGHT,

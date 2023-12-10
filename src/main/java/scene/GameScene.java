@@ -7,8 +7,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import view.util.Subject;
 
 public class GameScene extends Subject{
-    private static final int WIDTH = 125;
-    private static final int HEIGHT = 50;
+    private static final int WIDTH = 10;
+    private static final int HEIGHT = 20;
     private static final int STOCK_SIZE = 10;
     
     private int width;
@@ -26,7 +26,6 @@ public class GameScene extends Subject{
         this.pieces = new CopyOnWriteArrayList<>();
         this.stock = new Stock(stockSize);
         this.currentPiece = null;
-        resetCells();
     }
 
     public GameScene(int width, int height){
@@ -66,11 +65,19 @@ public class GameScene extends Subject{
             Arrays.fill(row, false);
         }
     }
+
+    private Thread currentThread = new Thread(new Runnable() {
+        @Override public void run() { start(); }
+    });
     
     public void run(){
-        new Thread(new Runnable() {
-            @Override public void run() { start(); }
-        }).start();
+        if(!currentThread.isInterrupted()) currentThread.interrupt();
+        if(currentThread.isInterrupted()){
+            currentThread = new Thread(new Runnable() {
+                @Override public void run() { start(); }
+            });
+            currentThread.start();
+        }
     }
 
     private void sleep(int time){
@@ -80,6 +87,10 @@ public class GameScene extends Subject{
     }
 
     private void start(){
+        resetCells();
+        currentPiece = null;
+        pieces.clear();
+
         boolean finish = false;
         while(!finish){
             // System.out.println("Nouvelle piece !");
@@ -88,7 +99,7 @@ public class GameScene extends Subject{
             while (!pieceFinish(currentPiece)) {
                 currentPiece.move(Move.DOWN);
                 reload();
-                sleep(100);
+                sleep(400);
             }
             finish = isFinish();
         }
@@ -97,7 +108,7 @@ public class GameScene extends Subject{
     
     private Piece preparePiece(){
         Piece p = stock.pop();
-        p.x = (int)(Math.random() * (width - p.width));
+        p.x = (int)(Math.random() * (width - p.width + 1));
         p.y = 0;
         addPiece(p);
         return p;
@@ -124,7 +135,8 @@ public class GameScene extends Subject{
 
     public void keyPressed(String key){
         switch (key) {
-            case "Z": currentPiece.move(Move.UP); break;
+            case "K": run(); break;
+            case "Space": System.out.println("Space !"); break;
             case "S": currentPiece.move(Move.DOWN); break;
             case "Q": currentPiece.move(Move.LEFT); break;
             case "D": currentPiece.move(Move.RIGHT); break;

@@ -62,7 +62,7 @@ public class Piece {
         return height;
     }
 
-    public boolean[][] build(String[] build){
+    private boolean[][] build(String[] build){
         boolean[][] cell = new boolean[build.length][];
         for (int y = 0; y < build.length; y++) {
             cell[y] = new boolean[build[y].length()];
@@ -78,7 +78,6 @@ public class Piece {
 
     public void move(Move m){
         switch (m) {
-            case UP: y--; break;
             case DOWN: y++; break;
             case LEFT: x--; break;
             case RIGHT: x++; break;
@@ -99,7 +98,7 @@ public class Piece {
             int tmp = width;
             width = height;
             height = tmp;
-            boolean[][] b = new boolean[width][height];
+            boolean[][] b = new boolean[height][width];
             for (int y = 0; y < cells.length; y++) {
                 for (int x = 0; x < cells[y].length; x++) {
                     b[x][y] = cells[y][x];
